@@ -74,7 +74,7 @@ function create_user($email, $password) {
 function get_movie_genres() {
     $pdo = get_PDO();
 
-    $query = $pdo->query('select * from genres');
+    $query = $pdo->query("select * from `genres`");
     return $query->fetchAll();
 }
 
@@ -82,20 +82,53 @@ function get_movies($params, $resultsPerPage, $page) {
 
     $pdo = get_PDO();
 
+    $sql = "SELECT * FROM `movie_data`";
 
-    $countQuery = $pdo->query("SELECT * from `movie_data` ORDER BY `title`");
-    $query = $pdo->prepare("SELECT * FROM `movie_data` ORDER BY `title` LIMIT :limit OFFSET :offset");
+    if(!empty($params)) {
+        $sql.=" WHERE ";
+        $paramLength = sizeof($params);
+        $paramCount = 0;
+    }
+
+    if(isset($params['genre_id'])) {
+        $paramCount++;
+        $sql.=sprintf("`%s`=%s", 'genre_id', intval($params['genre_id']));
+        if($paramCount<$paramLength) {
+            $sql.=" AND ";
+        }
+    }
+
+    if(isset($params['title'])) {
+        $paramCount++;
+        $sql.=sprintf("`%s`='%s'", 'title', $params['title']);
+        if($paramCount<$paramLength) {
+            $sql.=" AND ";
+        }
+    }
+
+    if(isset($params['releasedFrom']) && isset($params['releasedTo'])) {
+        $sql.=sprintf("`%s` BETWEEN '%s' AND '%s'", 'date', $params['releasedFrom'], $params['releasedTo']);
+    }
+
+    $countQuery = $pdo->query($sql);
+
+    $sql.=" ORDER BY `title` LIMIT :limit OFFSET :offset";
+
+    $query = $pdo->prepare($sql);
 
     $offset = $page*$resultsPerPage;
 
     $query->bindParam(':limit', $resultsPerPage, PDO::PARAM_INT);
     $query->bindParam(':offset', $offset , PDO::PARAM_INT);
+
     $query->execute();
 
     return array(
         'results' => $query->fetchAll(),
-        'current_page' => $page+1,
+        'result_count' => $countQuery->rowCount(),
+        'current_page' => $page,
         'pages' => ceil($countQuery->rowCount()/$resultsPerPage),
+        'results_per_page' => $resultsPerPage,
         'params' => $params
     );
 }

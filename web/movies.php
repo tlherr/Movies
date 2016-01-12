@@ -18,10 +18,10 @@ if (isset($_POST['submit'])) {
 
     $params = array();
 
-    if(isset($_POST['genre']) && !empty($_POST['genre'])) {
-        $genre = $_POST['genre'];
-        $_SESSION['genre'] = $genre;
-        $params['genre'] = $genre;
+    if(isset($_POST['genre_id']) && !empty($_POST['genre_id'])) {
+        $genre_id = $_POST['genre_id'];
+        $_SESSION['genre_id'] = $genre_id;
+        $params['genre_id'] = $genre_id;
     }
 
     if(isset($_POST['title']) && !empty($_POST['title'])) {
@@ -54,7 +54,7 @@ if (isset($_POST['submit'])) {
     echo $twig->render('movies.html.twig', array(
         'is_logged_in' => is_logged_in(),
         'user' => get_user_from_session(),
-        'genres' => get_movie_genres(),
+        'genre_ids' => get_movie_genres(),
         'movies' => $movies
     ));
 } else {
@@ -63,16 +63,44 @@ if (isset($_POST['submit'])) {
     if(isset($_GET['page']) && !empty($_GET['page'])) {
         $page = $_GET['page'];
 
+        $params = array();
+
+        if(isset($_SESSION['genre_id'])) {
+            $params['genre_id'] = $_SESSION['genre_id'];
+        }
+
+        if(isset($_SESSION['title'])) {
+            $params['title'] = $_SESSION['title'];
+        }
+
+        if(isset($_SESSION['releasedFrom'])) {
+            $params['releasedFrom'] = $_SESSION['releasedFrom'];
+        }
+
+        if(isset($_SESSION['releasedTo'])) {
+            $params['releasedTo'] = $_SESSION['releasedTo'];
+        }
+
+        if(isset($_SESSION['pageResults'])) {
+            $pageResults = $_SESSION['pageResults'];
+        } else {
+            $pageResults = 30;
+        }
+
+        $movies = get_movies($params, intval($pageResults), $page);
         echo $twig->render('movies.html.twig', array(
             'is_logged_in' => is_logged_in(),
             'user' => get_user_from_session(),
-            'genres' => get_movie_genres()
+            'genre_ids' => get_movie_genres(),
+            'movies' => $movies
         ));
     } else {
+        $movies = get_movies(null, 30, 0);
         echo $twig->render('movies.html.twig', array(
             'is_logged_in' => is_logged_in(),
             'user' => get_user_from_session(),
-            'genres' => get_movie_genres()
+            'genre_ids' => get_movie_genres(),
+            'movies' => $movies
         ));
     }
 }
