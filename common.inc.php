@@ -15,6 +15,13 @@ $twig->addExtension(new Twig_Extension_Debug());
 require('db.inc.php');
 
 
+function tableExists(PDO $pdo, $id)
+{
+    $results = $pdo->query("SHOW TABLES LIKE '$id'");
+
+    return ($results->rowCount()>0);
+}
+
 /**
  * Check the current session variable against a user
  */
@@ -107,7 +114,7 @@ function get_movies($params, $resultsPerPage, $page) {
     }
 
     if(isset($params['releasedFrom']) && isset($params['releasedTo'])) {
-        $sql.=sprintf("`%s` BETWEEN '%s' AND '%s'", 'date', $params['releasedFrom'], $params['releasedTo']);
+        $sql.=sprintf("`%s` BETWEEN '%s' AND '%s'", 'release_date', $params['releasedFrom'], $params['releasedTo']);
     }
 
     $countQuery = $pdo->query($sql);
@@ -131,4 +138,15 @@ function get_movies($params, $resultsPerPage, $page) {
         'results_per_page' => $resultsPerPage,
         'params' => $params
     );
+}
+
+function add_movie($genre_id, $title, $release_date) {
+    $pdo = get_PDO();
+
+    $query = $pdo->prepare("INSERT INTO `movie_data` (title, genre_id, release_date) VALUES (:title, :genre_id, :release_date)");
+    $query->bindValue('genre_id', $genre_id, PDO::PARAM_INT);
+    $query->bindValue('title', $title, PDO::PARAM_STR);
+    $query->bindValue('release_date', $release_date, PDO::PARAM_STR);
+
+    return $query->execute();
 }
