@@ -69,6 +69,7 @@
 
                 {% if movies is not empty %}
                     {% for movie in movies.results %}
+
                         <tr>
                             <th scope="row">{{ movie.id }}</th>
                             <td>{{ movie.title|length > 50 ? movie.title|slice(0, 50) ~ '...' : movie.title  }}</td>
