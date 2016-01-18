@@ -22,12 +22,16 @@ if (isset($_POST['submit'])) {
         $genre_id = $_POST['genre_id'];
         $_SESSION['genre_id'] = $genre_id;
         $params['genre_id'] = $genre_id;
+    } else {
+        unset($_SESSION['genre_id']);
     }
 
     if(isset($_POST['title']) && !empty($_POST['title'])) {
         $title = $_POST['title'];
         $_SESSION['title'] = $title;
         $params['title'] = $title;
+    } else {
+        unset($_SESSION['title']);
     }
 
     if(isset($_POST['releasedFrom']) && !empty($_POST['releasedFrom'])) {

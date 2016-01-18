@@ -406,3 +406,42 @@ function add_movie(array $genres, $title, $release_date, $score, $imdb_id, $post
     //Insert the movie into the database, get the ID it was given and then insert the genre stuff
 
 }
+
+
+function delete_movie($id) {
+    $pdo = get_PDO();
+
+    try {
+        //Initiate a transaction
+        $pdo->beginTransaction();
+
+        $genreDeleteQuery = $pdo->prepare("DELETE FROM `movie_genres` WHERE movie_id = :movie_id");
+        $genreDeleteQuery->bindParam(":movie_id", $id, PDO::PARAM_INT);
+
+        if($genreDeleteQuery->execute()) {
+            $movieDeleteQuery = $pdo->prepare("DELETE FROM `movie_data` WHERE id = :movie_id");
+            $movieDeleteQuery->bindParam(":movie_id", $id, PDO::PARAM_INT);
+            $genreDeleteQuery->execute();
+
+            $commit = true;
+        } else {
+            $commit = false;
+        }
+
+
+    } catch(PDOException $ex) {
+        $commit = false;
+    }
+
+
+    if(!$commit){
+        $pdo->rollback();
+    } else {
+        $pdo->commit();
+        //Return true or something
+
+        return true;
+    }
+
+    return false;
+}
