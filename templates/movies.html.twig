@@ -34,11 +34,11 @@
                 </div>
                 <div class="form-group">
                     <label for="releasedFrom">Released Between</label>
-                    <input type="date" class="form-control" id="releasedFrom" name="releasedFrom" {% if movies.params.releasedFrom is not empty %} value="{{ movies.params.releasedFrom }}" {% endif %}>
+                    <input type="number" class="form-control" id="releasedFrom" name="releasedFrom" min="1980" max="2016" {% if movies.params.releasedFrom is not empty %} value="{{ movies.params.releasedFrom }}" {% endif %}>
                 </div>
                 <div class="form-group">
                     <label for="releasedTo">And</label>
-                    <input type="date" class="form-control" id="releasedTo" name="releasedTo" {% if movies.params.releasedTo is not empty %} value="{{ movies.params.releasedTo }}" {% endif %}>
+                    <input type="number" class="form-control" id="releasedTo" name="releasedTo" min="1980" max="2016" {% if movies.params.releasedTo is not empty %} value="{{ movies.params.releasedTo }}" {% endif %}>
                 </div>
                 <hr>
                 <div class="form-group">

@@ -15,6 +15,7 @@
                 {% set active_genres = movie.genre_id|split(',') %}
             <form class="form-horizontal" action="edit_movie.php" method="POST">
 
+                {% if genre_ids is not empty %}
                 <div class="form-group">
                     <span class="checkbox-label col-md-12">Genre</span>
                     {% for genre in genre_ids %}
@@ -23,8 +24,9 @@
                             <input type="checkbox" name="genre[]" id="genre" value="{{ genre.id }}" {% if genre.id in active_genres %}checked=""{% endif %}>{{ genre.genre }}
                         </label>
                     </div>
-                {% endfor %}
+                    {% endfor %}
                 </div>
+                {% endif %}
 
                 <div class="form-group {% if errors.score is not empty %}has-error{% endif %}">
                     <label for="score" class="col-sm-3">Score</label>

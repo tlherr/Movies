@@ -30,6 +30,7 @@ EOL;
   `release_date` year(4) DEFAULT NULL,
   `score` text DEFAULT NULL,
   `imdb_id` text DEFAULT NULL,
+  `image_file_path` text DEFAULT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOL;

@@ -237,13 +237,76 @@ function get_movies($params, $resultsPerPage, $page) {
     );
 }
 
-function add_movie($genre_id, $title, $release_date) {
+function add_movie(array $genres, $title, $release_date, $score, $imdb_id, $poster) {
     $pdo = get_PDO();
 
-    $query = $pdo->prepare("INSERT INTO `movie_data` (title, genre_id, release_date) VALUES (:title, :genre_id, :release_date)");
-    $query->bindValue('genre_id', $genre_id, PDO::PARAM_INT);
-    $query->bindValue('title', $title, PDO::PARAM_STR);
-    $query->bindValue('release_date', $release_date, PDO::PARAM_STR);
 
-    return $query->execute();
+    $relPath = '/img/'.basename($poster["name"]);
+    $target_file = __DIR__.'/web'.$relPath;
+
+    if (file_exists($target_file)) {
+        echo "Sorry, file already exists.";
+        return null;
+    }
+    // Check file size
+    if ($poster["size"] > 500000) {
+        echo "Sorry, your file is too large.";
+        return null;
+    }
+
+    $file = move_uploaded_file($poster["tmp_name"], $target_file);
+
+    if(!$file) {
+        return null;
+    }
+
+
+    try {
+
+        //Initiate a transaction
+        $pdo->beginTransaction();
+
+        $query = $pdo->prepare("INSERT INTO `movie_data` (title, release_date, score, imdb_id, image_file_path)
+                                VALUES (:title, :release_date, :score, :imdb_id, :image_file_path)");
+        $query->bindParam(':title', $title, PDO::PARAM_STR);
+        $query->bindParam(':release_date', $release_date, PDO::PARAM_INT);
+        $query->bindParam(':score', $score, PDO::PARAM_STR);
+        $query->bindParam(':imdb_id', $imdb_id, PDO::PARAM_INT);
+        $query->bindParam(':image_file_path', $relPath, PDO::PARAM_STR);
+
+
+        if($query->execute()) {
+
+            $id = $pdo->lastInsertId();
+
+            foreach($genres as $genre) {
+                $insertQuery = $pdo->prepare("INSERT INTO `movie_genres` (movie_id,genre_id) VALUES (:movie_id, :genre_id)");
+                $insertQuery->bindParam(':movie_id', $id, PDO::PARAM_INT);
+                $insertQuery->bindParam(':genre_id', $genre, PDO::PARAM_INT);
+                $insertQuery->execute();
+            }
+
+            $commit = true;
+        } else {
+            $commit = false;
+        }
+
+
+    } catch(PDOException $e) { //If the update or select query fail, we can't commit any changes to the database
+        $commit = false;
+    }
+
+    if(!$commit){
+        $pdo->rollback();
+    } else {
+        $pdo->commit();
+        //Return true or something
+
+        return true;
+    }
+
+    return false;
+
+    //Insert the movie into the database, get the ID it was given and then insert the genre stuff
+
 }
