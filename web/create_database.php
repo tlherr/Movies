@@ -140,7 +140,8 @@ EOL;
 
                     while (($data = fgetcsv($handle, 1000, "\t")) !== FALSE) {
 
-                        $genres = explode(',', $data[4]);
+                        $genres = array_unique(explode(',', $data[4]));
+
                         foreach($genres as $genre) {
                             $genre_query = $pdo->prepare("SELECT * FROM `genres` WHERE genre=:genre");
                             $genre_query->bindParam(':genre', $genre, PDO::PARAM_STR);

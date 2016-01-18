@@ -90,6 +90,60 @@ function get_movie_genres() {
     return $query->fetchAll();
 }
 
+function update_movie($id, array $genres, $score, $title, $date, $imdb_id) {
+
+    $pdo = get_PDO();
+
+    //Step one, delete all the old Genres matching this movie ID
+    $q1 = "DELETE FROM `movie_genres` WHERE movie_id= :movie_id";
+
+    //Step two insert the new genre IDs
+    $q2 = "INSERT INTO `movie_genres` (movie_id,genre_id) VALUES (:movie_id, :genre_id)";
+
+    //Step three, update any values in the movie_data table
+    $q3 = "UPDATE `movie_data`
+                 SET score=:score, title=:title, release_date=:release_date, imdb_id=:imdb_id
+                 WHERE id= :movie_id";
+
+    try {
+
+        //Initiate a transaction
+        $pdo->beginTransaction();
+
+        $deleteQuery = $pdo->prepare($q1);
+        $deleteQuery->bindParam(':movie_id', $id, PDO::PARAM_INT);
+        $deleteQuery->execute();
+
+        foreach($genres as $genre) {
+            $insertQuery = $pdo->prepare($q2);
+            $insertQuery->bindParam(':movie_id', $id, PDO::PARAM_INT);
+            $insertQuery->bindParam(':genre_id', $genre, PDO::PARAM_INT);
+            $insertQuery->execute();
+        }
+
+        $updateQuery = $pdo->prepare($q3);
+        $updateQuery->bindParam(':movie_id', $id, PDO::PARAM_INT);
+        $updateQuery->bindParam(':score', $score, PDO::PARAM_STR);
+        $updateQuery->bindParam(':title', $title, PDO::PARAM_STR);
+        $updateQuery->bindParam(':release_date', $date, PDO::PARAM_INT);
+        $updateQuery->bindParam(':imdb_id', $imdb_id, PDO::PARAM_INT);
+        $updateQuery->execute();
+
+        $commit = true;
+
+    } catch(PDOException $e) { //If the update or select query fail, we can't commit any changes to the database
+        $commit = false;
+    }
+
+    if(!$commit){
+        $pdo->rollback();
+    } else {
+        $pdo->commit();
+        //Return true or something
+    }
+
+}
+
 
 function get_movie_by_id($id) {
     $pdo = get_PDO();

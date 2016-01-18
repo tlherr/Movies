@@ -18,6 +18,10 @@ if (isset($_POST['submit'])) {
     $errors = array();
     $messages = array();
 
+    //genre, score, title, date, movie_id
+
+    update_movie($_POST['movie_id'], $_POST['genre'], $_POST['score'], $_POST['title'], $_POST['date'], $_POST['movie_id']);
+    header("Location: movies.php");
 
 
 } else {
