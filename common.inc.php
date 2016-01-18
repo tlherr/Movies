@@ -90,45 +90,63 @@ function get_movie_genres() {
     return $query->fetchAll();
 }
 
+
+/**
+ *
+ * SELECT movie_data.id, title, release_date, score, imdb_id, GROUP_CONCAT(genres.genre) AS genre_id FROM `movie_data`
+JOIN movie_genres ON movie_data.id = movie_genres.movie_id
+JOIN genres ON genres.id = movie_genres.genre_id
+WHERE movie_data.title="Rome"
+GROUP BY movie_data.id ORDER BY `title` LIMIT 30 OFFSET 0
+ *
+ *
+ * @param $params
+ * @param $resultsPerPage
+ * @param $page
+ * @return array
+ */
+
 function get_movies($params, $resultsPerPage, $page) {
 
     $pdo = get_PDO();
 
     $sql = "SELECT movie_data.id, title, release_date, score, imdb_id, GROUP_CONCAT(genres.genre) AS genre_id FROM `movie_data`";
 
-//    if(!empty($params)) {
-//        $sql.=" WHERE ";
-//        $paramLength = sizeof($params);
-//        $paramCount = 0;
-//    }
-//
-//    if(isset($params['genre_id'])) {
-//        $paramCount++;
-//        $sql.=sprintf("`%s`=%s", 'genre_id', intval($params['genre_id']));
-//        if($paramCount<$paramLength) {
-//            $sql.=" AND ";
-//        }
-//    }
-//
-//    if(isset($params['title'])) {
-//        $paramCount++;
-//        $sql.=sprintf("`%s`='%s'", 'title', $params['title']);
-//        if($paramCount<$paramLength) {
-//            $sql.=" AND ";
-//        }
-//    }
-//
-//    if(isset($params['releasedFrom']) && isset($params['releasedTo'])) {
-//        $sql.=sprintf("`%s` BETWEEN '%s' AND '%s'", 'release_date', $params['releasedFrom'], $params['releasedTo']);
-//    }
+    $sql.=" JOIN movie_genres ON movie_data.id = movie_genres.movie_id JOIN genres ON genres.id = movie_genres.genre_id";
 
-    $countQuery = $pdo->query("SELECT * FROM `movie_data`");
+    if(!empty($params)) {
+        $sql.=" WHERE ";
+        $paramLength = sizeof($params);
+        $paramCount = 0;
+    }
 
-    //$sql.=" ORDER BY `title` LIMIT :limit OFFSET :offset";
+    if(isset($params['genre_id'])) {
+        $paramCount++;
+        $sql.=sprintf("%s=%s", 'genres.id', intval($params['genre_id']));
+        if($paramCount<$paramLength) {
+            $sql.=" AND ";
+        }
+    }
 
-    $sql.=" JOIN movie_genres ON movie_data.id = movie_genres.movie_id
-JOIN genres ON genres.id = movie_genres.genre_id
-GROUP BY movie_data.id";
+    if(isset($params['title'])) {
+        $paramCount++;
+        $sql.=sprintf("%s='%s'", 'movie_data.title', $params['title']);
+        if($paramCount<$paramLength) {
+            $sql.=" AND ";
+        }
+    }
+
+    if(isset($params['releasedFrom']) && isset($params['releasedTo'])) {
+        $sql.=sprintf("%s BETWEEN '%s' AND '%s'", 'movie_data.release_date', $params['releasedFrom'], $params['releasedTo']);
+    }
+
+
+    $sql.=" GROUP BY movie_data.id ORDER BY `title`";
+
+
+    $countQuery = $pdo->query($sql);
+
+    $sql.=" LIMIT :limit OFFSET :offset";
 
     $query = $pdo->prepare($sql);
 
