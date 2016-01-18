@@ -1,7 +1,9 @@
 <?php
 
+//Saving sessions in local "project" directory to avoid any issues on a shared host etc
 ini_set('session.save_path',__DIR__.'/sessions');
 
+//Load Twig (use this for templating vs raw php, find it cleaner)
 require_once '../lib/Twig/lib/Twig/Autoloader.php';
 Twig_Autoloader::register();
 
@@ -10,48 +12,87 @@ $twig = new Twig_Environment($loader, array(
     'cache' => false,
     'debug' => true,
 ));
+//Disable this if project were ever to actually be used (which it shouldnt be)
 $twig->addExtension(new Twig_Extension_Debug());
 
+//Include the database connection file (this is intentionally seperated so it can be removed from
+//version control and placed outside of the web directory
 require('db.inc.php');
 
-
+/**
+ * Helper function to check if a specified table in the database actually exists
+ * Useful for the installer to check and see if it needs to be run if invoked
+ *
+ * @param PDO $pdo
+ * @param $id
+ * @return bool
+ */
 function tableExists(PDO $pdo, $id)
 {
-    $results = $pdo->query("SHOW TABLES LIKE '$id'");
+    $query = $pdo->prepare("SHOW TABLES LIKE :id");
+    $query->bindParam(":id", $id, PDO::PARAM_INT);
+
+    $results = $query->execute();
 
     return ($results->rowCount()>0);
 }
 
 /**
- * Check the current session variable against a user
+ * Check the session variable to see if a user has been set
+ * Most pages use this as a general check to see if an action is allowed or
+ * something should be displayed or hidden
+ *
+ * @return bool
  */
 function is_logged_in() {
     return (isset($_SESSION['user']));
 }
 
+/**
+ * Helper function to check to see if a specified email address already exists in the database
+ *
+ * @param $email
+ * @return int
+ */
 function is_email_unique($email) {
     $pdo = get_PDO();
 
     if($pdo) {
-        $query = $pdo->prepare('SELECT * from users where email = :email');
+        $query = $pdo->prepare('SELECT * FROM `users` WHERE email = :email');
         $query->bindParam(':email', $email);
         $query->execute();
 
         $result = $query->rowCount();
         return $result;
     }
+
+    return false;
 }
 
+/**
+ * Session variables just hold basic information
+ * This method will return the database information for a user that has been
+ * set in the session
+ *
+ * @return mixed
+ */
 function get_user_from_session() {
     $pdo = get_PDO();
 
-    $query = $pdo->prepare('select * from users where email = :email');
+    $query = $pdo->prepare('SELECT * FROM `users` where email = :email');
     $query->bindParam(':email', $_SESSION['user']);
     $query->execute();
 
     return $query->fetchObject();
 }
 
+/**
+ * Helper function to retrieve a user from the database
+ *
+ * @param $email
+ * @param $password
+ * @return mixed|null
+ */
 function get_user($email, $password) {
     $pdo = get_PDO();
 
@@ -73,6 +114,15 @@ function get_user($email, $password) {
 
 }
 
+/**
+ * Helper function to insert a new user into database
+ *
+ * Using php built in hashing libraries to avoid storing passwords in plaintext
+ *
+ * @param $email
+ * @param $password
+ * @return bool
+ */
 function create_user($email, $password) {
     $pdo = get_PDO();
 
@@ -83,13 +133,35 @@ function create_user($email, $password) {
     return $result;
 }
 
+/**
+ * Return an array of all currently defined movie genres from the database
+ *
+ * @return array
+ */
 function get_movie_genres() {
     $pdo = get_PDO();
 
-    $query = $pdo->query("select * from `genres`");
+    $query = $pdo->query("SELECT * FROM `genres`");
     return $query->fetchAll();
 }
 
+/**
+ * Update a movie in the database.
+ *
+ * Using PDO transactions for this as we first have to clear out any old genre data
+ * add in the new genre data and then update the values in the movies_data table
+ *
+ * Transactions allow us to only commit changes when we know everything has succeeded
+ * If any of the operations throw a SQL execption the database will automatically roll back
+ * avoiding orphaned join data
+ *
+ * @param $id
+ * @param array $genres
+ * @param $score
+ * @param $title
+ * @param $date
+ * @param $imdb_id
+ */
 function update_movie($id, array $genres, $score, $title, $date, $imdb_id) {
 
     $pdo = get_PDO();
@@ -144,7 +216,12 @@ function update_movie($id, array $genres, $score, $title, $date, $imdb_id) {
 
 }
 
-
+/**
+ * Given a specified ID retrieve a movie from the database and return it as an object
+ *
+ * @param $id
+ * @return mixed
+ */
 function get_movie_by_id($id) {
     $pdo = get_PDO();
 
@@ -161,12 +238,17 @@ function get_movie_by_id($id) {
 
 
 /**
+ * Main function of the application
+ *
+ * This will retrieve movie data from the database based on user specified filters.
+ *
+ * The actual query looks like this:
  *
  * SELECT movie_data.id, title, release_date, score, imdb_id, GROUP_CONCAT(genres.genre) AS genre_id FROM `movie_data`
-JOIN movie_genres ON movie_data.id = movie_genres.movie_id
-JOIN genres ON genres.id = movie_genres.genre_id
-WHERE movie_data.title="Rome"
-GROUP BY movie_data.id ORDER BY `title` LIMIT 30 OFFSET 0
+ * JOIN movie_genres ON movie_data.id = movie_genres.movie_id
+ * JOIN genres ON genres.id = movie_genres.genre_id
+ * WHERE filters
+ * GROUP BY movie_data.id ORDER BY `title` LIMIT 30 OFFSET 0
  *
  *
  * @param $params
@@ -237,6 +319,20 @@ function get_movies($params, $resultsPerPage, $page) {
     );
 }
 
+/**
+ * Insert a movie into the database.
+ *
+ * Also using transactions model because our genre data is in a seperate table.
+ * Either all the SQL queries work or a rollback will be performed
+ *
+ * @param array $genres
+ * @param $title
+ * @param $release_date
+ * @param $score
+ * @param $imdb_id
+ * @param $poster
+ * @return bool|null
+ */
 function add_movie(array $genres, $title, $release_date, $score, $imdb_id, $poster) {
     $pdo = get_PDO();
 
