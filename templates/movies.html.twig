@@ -80,6 +80,7 @@
                             <td>{{ movie.genre_id }}</td>
                             <td>{{ movie.release_date }}</td>
                             <td class="text-center">
+                                <a class='btn btn-primary btn-xs' href="view_movie.php?movie_id={{ movie.id }}"><span class="glyphicon glyphicon-search"></span> View</a>
                                 <a class='btn btn-info btn-xs' href="edit_movie.php?movie_id={{ movie.id }}"><span class="glyphicon glyphicon-edit"></span> Edit</a>
                                 <a href="delete_movie.php?movie_id={{ movie.id }}" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Del</a>
                             </td>

@@ -1,0 +1,47 @@
+{% extends "base.html.twig" %}
+
+{% block title %}View Movie{% endblock %}
+
+{% block content %}
+
+    <div class="page-header">
+        <h1>{{ movie.title }}</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+
+            {% if movie.image_file_path is not empty %}
+                <img class="img-thumbnail img-responsive" src="{{ movie.image_file_path }}" />
+            {% endif %}
+
+            <div class="list-group">
+                <a class="list-group-item">
+                    <h4 class="list-group-item-heading">Release Date</h4>
+                    <p class="list-group-item-text">{{ movie.release_date }}</p>
+                </a>
+
+                <a class="list-group-item">
+                    <h4 class="list-group-item-heading">IMDB Score</h4>
+                    <p class="list-group-item-text">{{ movie.score }}</p>
+                </a>
+
+                <a class="list-group-item">
+                    <h4 class="list-group-item-heading">IMDB ID</h4>
+                    <p class="list-group-item-text">{{ movie.imdb_id }}</p>
+                </a>
+
+                <a class="list-group-item">
+                    <h4 class="list-group-item-heading">Genre</h4>
+                    <p class="list-group-item-text">{{ movie.genre_id }}</p>
+                </a>
+            </div>
+
+            <a href="movies.php" class="btn btn-info pull-right">Back</a>
+
+
+
+        </div>
+    </div>
+
+{% endblock %}

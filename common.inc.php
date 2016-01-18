@@ -225,7 +225,7 @@ function update_movie($id, array $genres, $score, $title, $date, $imdb_id) {
 function get_movie_by_id($id) {
     $pdo = get_PDO();
 
-    $sql = "SELECT movie_data.id, title, release_date, score, imdb_id, GROUP_CONCAT(genres.id) AS genre_id FROM `movie_data`";
+    $sql = "SELECT movie_data.id, title, release_date, score, imdb_id, GROUP_CONCAT(genres.genre) AS genre_id FROM `movie_data`";
     $sql.=" JOIN movie_genres ON movie_data.id = movie_genres.movie_id JOIN genres ON genres.id = movie_genres.genre_id WHERE movie_data.id=:movie_id";
     $query = $pdo->prepare($sql);
     $query->bindParam(':movie_id', $id, PDO::PARAM_INT);
