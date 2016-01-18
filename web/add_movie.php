@@ -17,7 +17,7 @@ if (isset($_POST['submit'])) {
     //Grab the values from the request, validate and save to DB then redirect to movies page
 
     $errors = array();
-    $flash = '';
+    $messages = array();
 
     if(isset($_POST['genre_id'])) {
         if(isset($_POST['title'])) {
@@ -27,16 +27,31 @@ if (isset($_POST['submit'])) {
                 if($operation) {
                     header("Location: movies.php");
                 } else {
-                    $flash = 'Database Error';
+                    $messages[] = array(
+                        'type' => 'error',
+                        'message' => 'Database Error'
+                    );
                 }
             } else {
                 $errors[] = 'genre_id';
+                $messages[] = array(
+                    'type' => 'error',
+                    'message' => 'Missing Genre'
+                );
             }
         } else {
             $errors[] = 'title';
+            $messages[] = array(
+                'type' => 'error',
+                'message' => 'Missing Title'
+            );
         }
     } else {
         $errors[] = 'date';
+        $messages[] = array(
+            'type' => 'error',
+            'message' => 'Missing Date'
+        );
     }
 
     echo $twig->render('add_movie.html.twig', array(
@@ -44,7 +59,7 @@ if (isset($_POST['submit'])) {
         'user' => get_user_from_session(),
         'genre_ids' => get_movie_genres(),
         'errors' => $errors,
-        'flash' => $flash
+        'messages' => $messages
     ));
 
 } else {

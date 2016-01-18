@@ -281,6 +281,7 @@ textarea {
 
 body {
     padding-top: 70px; /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+    padding-bottom: 70px;
 }
 
 
@@ -296,6 +297,15 @@ body {
 .no-js .pagination {
     display: none;
 }
+
+.checkbox-label {
+    padding-top: 7px;
+    margin-bottom: 0;
+    text-align: left;
+    font-weight: bold;
+}
+
+
 
 footer {
     position: fixed;
